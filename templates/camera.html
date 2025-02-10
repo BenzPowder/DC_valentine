@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="th">
 <head>
     <title>Valentine Day Camera</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
@@ -14,56 +14,40 @@
             background-color: #ffebee;
             min-height: 100vh;
             touch-action: manipulation;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
             user-select: none;
         }
         #camera-container {
             position: relative;
             width: 100%;
-            max-width: 100vw;
             margin: 10px auto;
             display: flex;
             justify-content: center;
             align-items: center;
             aspect-ratio: 3/4;
+            max-height: 80vh;
+            background-color: #000;
         }
-        #video {
+        #video, #canvas, #preview {
             width: 100%;
             height: 100%;
             border-radius: 10px;
             border: 3px solid #e91e63;
             object-fit: cover;
-            background-color: #000;
         }
-        #canvas {
+        #canvas, #preview {
             display: none;
-        }
-        #preview, #video-preview {
-            display: none;
-            width: 100%;
-            height: 100%;
-            border-radius: 10px;
-            border: 3px solid #e91e63;
-            object-fit: contain;
-            background-color: #000;
         }
         .button-container {
             display: flex;
             gap: 8px;
-            margin-top: 15px;
             flex-wrap: wrap;
             justify-content: center;
             width: 100%;
-            padding: 0 10px;
+            padding: 10px;
             position: fixed;
-            bottom: 20px;
-            left: 0;
-            right: 0;
+            bottom: 0;
             background: rgba(255, 235, 238, 0.9);
-            padding: 15px;
             backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
         }
         button {
             background-color: #e91e63;
@@ -73,121 +57,16 @@
             border-radius: 25px;
             cursor: pointer;
             font-size: 16px;
-            margin: 5px;
-            font-family: 'Kanit', sans-serif;
-            -webkit-tap-highlight-color: transparent;
-            touch-action: manipulation;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 120px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
             transition: transform 0.1s ease;
+            flex: 1 1 40%;
+            max-width: 180px;
         }
         button:active {
             transform: scale(0.95);
         }
         button:hover {
             background-color: #c2185b;
-        }
-<<<<<<< HEAD
-        button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-        }
-        .success-message {
-            color: #4CAF50;
-            font-size: 16px;
-            margin: 10px 0;
-            text-align: center;
-            display: none;
-            padding: 10px;
-            background-color: rgba(232, 245, 233, 0.9);
-            border-radius: 8px;
-            width: 90%;
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1000;
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        #switch-camera {
-            background-color: #2196F3;
-        }
-        #switch-camera:hover {
-            background-color: #1976D2;
-=======
-        #preview {
-            display: none;
-            max-width: 100%;
-            border-radius: 10px;
-            border: 3px solid #e91e63;
-        }
-        .button-container {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
->>>>>>> parent of 6bd6cc8 (add file)
-        }
-        #record-button {
-            background-color: #f44336;
-        }
-        #record-button.recording {
-            background-color: #4CAF50;
-            animation: pulse 1.5s infinite;
-        }
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-        h1 {
-            font-size: 24px;
-            text-align: center;
-            margin: 10px 0;
-            color: #e91e63;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
-        }
-        .recording-timer {
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 14px;
-            display: none;
-            z-index: 1000;
-        }
-        @media (orientation: landscape) {
-            #camera-container {
-                aspect-ratio: 16/9;
-                height: 70vh;
-            }
-            .button-container {
-                position: relative;
-                bottom: auto;
-                background: none;
-                backdrop-filter: none;
-                -webkit-backdrop-filter: none;
-            }
-        }
-        /* iOS fixes */
-        @supports (-webkit-touch-callout: none) {
-            html {
-                position: fixed;
-                height: 100%;
-                overflow: hidden;
-            }
-            body {
-                overflow: auto;
-                -webkit-overflow-scrolling: touch;
-            }
         }
     </style>
 </head>
@@ -197,99 +76,31 @@
         <video id="video" autoplay></video>
         <canvas id="canvas"></canvas>
         <img id="preview">
-        <video id="video-preview" controls playsinline></video>
-        <div class="recording-timer" id="recording-timer">00:00</div>
     </div>
     <div class="button-container">
         <button id="capture">📸 ถ่ายรูป</button>
-        <!-- <button id="record-button">🎥 วิดีโอ</button> -->
         <button id="retake" style="display: none;">🔄 ถ่ายใหม่</button>
         <button id="upload" style="display: none;">✉️ ส่งรูป</button>
-        <!-- <button id="upload-video" style="display: none;">✉️ ส่งวิดีโอ</button> -->
     </div>
 
     <script>
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
         const preview = document.getElementById('preview');
-        const videoPreview = document.getElementById('video-preview');
         const captureButton = document.getElementById('capture');
-        const recordButton = document.getElementById('record-button');
         const retakeButton = document.getElementById('retake');
         const uploadButton = document.getElementById('upload');
-<<<<<<< HEAD
-        const uploadVideoButton = document.getElementById('upload-video');
-        const switchButton = document.getElementById('switch-camera');
-        const successMessage = document.getElementById('success-message');
-        const recordingTimer = document.getElementById('recording-timer');
-        
         let stream;
-        let mediaRecorder;
-        let recordedChunks = [];
-        let isRecording = false;
-        let facingMode = 'user'; // เริ่มด้วยกล้องหน้า
-        let recordingStartTime;
-        let recordingInterval;
-
-        function updateRecordingTimer() {
-            const now = Date.now();
-            const duration = now - recordingStartTime;
-            const seconds = Math.floor((duration / 1000) % 60);
-            const minutes = Math.floor((duration / 1000 / 60) % 60);
-            recordingTimer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        }
-=======
-        let stream;
->>>>>>> parent of 6bd6cc8 (add file)
 
         async function startCamera() {
             try {
-<<<<<<< HEAD
-                const constraints = {
-                    video: { 
-                        facingMode: facingMode,
-                        width: { ideal: window.innerWidth },
-                        height: { ideal: window.innerHeight }
-                    },
-                    audio: true
-                };
-
-                stream = await navigator.mediaDevices.getUserMedia(constraints);
-=======
-                stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: 'environment' }  // ใช้กล้องหลังถ้ามี
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment' }  // กล้องหลัง
                 });
->>>>>>> parent of 6bd6cc8 (add file)
                 video.srcObject = stream;
-
-                // รอให้วิดีโอโหลดเสร็จก่อนที่จะปรับขนาด
-                video.onloadedmetadata = () => {
-                    const videoAspectRatio = video.videoWidth / video.videoHeight;
-                    const containerAspectRatio = window.innerWidth / window.innerHeight;
-
-                    if (videoAspectRatio > containerAspectRatio) {
-                        video.style.width = '100%';
-                        video.style.height = 'auto';
-                    } else {
-                        video.style.width = 'auto';
-                        video.style.height = '100%';
-                    }
-                };
-
-                // เช็คว่าสามารถใช้งานกล้องหน้า/หลังได้หรือไม่
-                const devices = await navigator.mediaDevices.enumerateDevices();
-                const videoDevices = devices.filter(device => device.kind === 'videoinput');
-                switchButton.style.display = videoDevices.length > 1 ? 'block' : 'none';
-
-            } catch (err) {
-                console.error("Error accessing camera:", err);
-                alert("ไม่สามารถเข้าถึงกล้องได้ กรุณาอนุญาตการใช้งานกล้องและไมโครโฟน");
-            }
-        }
-
-        function stopCamera() {
-            if (stream) {
-                stream.getTracks().forEach(track => track.stop());
+            } catch (error) {
+                alert("ไม่สามารถเข้าถึงกล้องได้ กรุณาอนุญาตการใช้งานกล้อง");
+                console.error(error);
             }
         }
 
@@ -298,200 +109,48 @@
             canvas.height = video.videoHeight;
             canvas.getContext('2d').drawImage(video, 0, 0);
             preview.src = canvas.toDataURL('image/jpeg');
-            
             video.style.display = 'none';
             preview.style.display = 'block';
             captureButton.style.display = 'none';
-<<<<<<< HEAD
-            recordButton.style.display = 'none';
-            switchButton.style.display = 'none';
-=======
->>>>>>> parent of 6bd6cc8 (add file)
             retakeButton.style.display = 'inline';
             uploadButton.style.display = 'inline';
-        });
-
-        recordButton.addEventListener('click', async () => {
-            try {
-                if (!isRecording) {
-                    // เริ่มการบันทึก
-                    mediaRecorder = new MediaRecorder(stream, {
-                        mimeType: 'video/webm;codecs=vp8,opus'
-                    });
-                    recordedChunks = [];
-                    
-                    mediaRecorder.ondataavailable = (event) => {
-                        if (event.data && event.data.size > 0) {
-                            recordedChunks.push(event.data);
-                        }
-                    };
-                    
-                    mediaRecorder.onstop = () => {
-                        const blob = new Blob(recordedChunks, { type: 'video/webm' });
-                        videoPreview.src = URL.createObjectURL(blob);
-                    };
-                    
-                    mediaRecorder.start(1000);
-                    isRecording = true;
-                    recordButton.textContent = '⏹️ หยุด';
-                    recordButton.classList.add('recording');
-                    captureButton.style.display = 'none';
-                    switchButton.style.display = 'none';
-                    
-                    // เริ่มจับเวลา
-                    recordingStartTime = Date.now();
-                    recordingTimer.style.display = 'block';
-                    recordingInterval = setInterval(updateRecordingTimer, 1000);
-                    
-                } else {
-                    // หยุดการบันทึก
-                    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-                        mediaRecorder.stop();
-                        clearInterval(recordingInterval);
-                        recordingTimer.style.display = 'none';
-                    }
-                    
-                    isRecording = false;
-                    recordButton.textContent = '🎥 วิดีโอ';
-                    recordButton.classList.remove('recording');
-                    
-                    video.style.display = 'none';
-                    videoPreview.style.display = 'block';
-                    recordButton.style.display = 'none';
-                    retakeButton.style.display = 'inline';
-                    uploadVideoButton.style.display = 'inline';
-                }
-            } catch (error) {
-                console.error('Error in record button click handler:', error);
-                alert('เกิดข้อผิดพลาดในการบันทึกวิดีโอ: ' + error.message);
-            }
         });
 
         retakeButton.addEventListener('click', () => {
             video.style.display = 'block';
             preview.style.display = 'none';
-            videoPreview.style.display = 'none';
             captureButton.style.display = 'inline';
-<<<<<<< HEAD
-            recordButton.style.display = 'inline';
-            switchButton.style.display = 'inline';
             retakeButton.style.display = 'none';
             uploadButton.style.display = 'none';
-            uploadVideoButton.style.display = 'none';
-            successMessage.style.display = 'none';
-=======
-            retakeButton.style.display = 'none';
-            uploadButton.style.display = 'none';
->>>>>>> parent of 6bd6cc8 (add file)
         });
 
         uploadButton.addEventListener('click', async () => {
             uploadButton.disabled = true;
             uploadButton.textContent = '⏳ กำลังส่ง...';
-            
             try {
                 const response = await fetch('/upload_photo', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        image: preview.src
-                    })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: preview.src })
                 });
-                
-<<<<<<< HEAD
-                const data = await response.json();
-                if (data.success) {
-                    successMessage.style.display = 'block';
-                    
-                    // รีเซ็ตกลับไปที่หน้ากล้อง
-                    video.style.display = 'block';
-                    preview.style.display = 'none';
-                    captureButton.style.display = 'inline';
-                    recordButton.style.display = 'inline';
-                    switchButton.style.display = 'inline';
-                    retakeButton.style.display = 'none';
-                    uploadButton.style.display = 'none';
-=======
                 if (response.ok) {
-                    window.location.href = '/dashboard';
+                    alert("ส่งรูปสำเร็จ!");
                 } else {
-                    throw new Error('Upload failed');
->>>>>>> parent of 6bd6cc8 (add file)
+                    throw new Error("Upload failed");
                 }
             } catch (error) {
-                console.error('Error uploading photo:', error);
-                alert('เกิดข้อผิดพลาดในการส่งรูป');
+                alert("เกิดข้อผิดพลาดในการส่งรูป");
+                console.error(error);
             } finally {
                 uploadButton.disabled = false;
                 uploadButton.textContent = '✉️ ส่งรูป';
             }
         });
 
-<<<<<<< HEAD
-        uploadVideoButton.addEventListener('click', async () => {
-            uploadVideoButton.disabled = true;
-            uploadVideoButton.textContent = '⏳ กำลังส่ง...';
-            
-            try {
-                const blob = new Blob(recordedChunks, { type: 'video/webm' });
-                const reader = new FileReader();
-                
-                reader.onloadend = async () => {
-                    try {
-                        const response = await fetch('/upload_video', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                                video: reader.result
-                            })
-                        });
-                        
-                        const data = await response.json();
-                        if (data.success) {
-                            successMessage.textContent = 'ส่งวิดีโอสำเร็จ! ✨';
-                            successMessage.style.display = 'block';
-                            
-                            // รีเซ็ตกลับไปที่หน้ากล้อง
-                            video.style.display = 'block';
-                            videoPreview.style.display = 'none';
-                            captureButton.style.display = 'inline';
-                            recordButton.style.display = 'inline';
-                            switchButton.style.display = 'inline';
-                            retakeButton.style.display = 'none';
-                            uploadVideoButton.style.display = 'none';
-                        }
-                    } catch (error) {
-                        console.error('Error uploading video:', error);
-                        alert('เกิดข้อผิดพลาดในการส่งวิดีโอ');
-                    } finally {
-                        uploadVideoButton.disabled = false;
-                        uploadVideoButton.textContent = '✉️ ส่งวิดีโอ';
-                    }
-                };
-                
-                reader.readAsDataURL(blob);
-            } catch (error) {
-                console.error('Error preparing video:', error);
-                alert('เกิดข้อผิดพลาดในการเตรียมวิดีโอ');
-                uploadVideoButton.disabled = false;
-                uploadVideoButton.textContent = '✉️ ส่งวิดีโอ';
-            }
-        });
-
-        // เพิ่ม event listener สำหรับการหมุนหน้าจอ
         window.addEventListener('orientationchange', () => {
-            setTimeout(() => {
-                startCamera();
-            }, 300);
+            setTimeout(() => startCamera(), 300);
         });
 
-        // เริ่มต้นกล้อง
-=======
->>>>>>> parent of 6bd6cc8 (add file)
         startCamera();
     </script>
 </body>
