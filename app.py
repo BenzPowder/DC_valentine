@@ -104,6 +104,10 @@ def upload_photo():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/get_latest_photo')
+def get_latest_photo():
+    return jsonify(latest_photo if latest_photo else {'filepath': None})
+
 @app.route('/upload_video', methods=['POST'])
 def upload_video():
     global latest_video
@@ -132,10 +136,6 @@ def upload_video():
         return jsonify({'success': True, 'filepath': latest_video['filepath']})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
-@app.route('/get_latest_photo')
-def get_latest_photo():
-    return jsonify(latest_photo if latest_photo else {'filepath': None})
 
 @app.route('/get_latest_video')
 def get_latest_video():

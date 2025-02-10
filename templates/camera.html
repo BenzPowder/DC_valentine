@@ -1,42 +1,91 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>ถ่ายรูปหรือวิดีโอ</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Valentine Day Camera</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <style>
         body {
             font-family: 'Kanit', sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
             background-color: #ffebee;
+            min-height: 100vh;
+            touch-action: manipulation;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
         }
         #camera-container {
             position: relative;
             width: 100%;
-            max-width: 600px;
-            margin: 20px auto;
+            max-width: 100vw;
+            margin: 10px auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            aspect-ratio: 3/4;
         }
         #video {
             width: 100%;
+            height: 100%;
             border-radius: 10px;
             border: 3px solid #e91e63;
+            object-fit: cover;
+            background-color: #000;
         }
         #canvas {
             display: none;
+        }
+        #preview, #video-preview {
+            display: none;
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+            border: 3px solid #e91e63;
+            object-fit: contain;
+            background-color: #000;
+        }
+        .button-container {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+            padding: 0 10px;
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            background: rgba(255, 235, 238, 0.9);
+            padding: 15px;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
         }
         button {
             background-color: #e91e63;
             color: white;
             border: none;
-            padding: 15px 30px;
+            padding: 12px 24px;
             border-radius: 25px;
             cursor: pointer;
-            font-size: 18px;
-            margin: 10px;
+            font-size: 16px;
+            margin: 5px;
             font-family: 'Kanit', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 120px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: transform 0.1s ease;
+        }
+        button:active {
+            transform: scale(0.95);
         }
         button:hover {
             background-color: #c2185b;
@@ -45,37 +94,24 @@
             background-color: #ccc;
             cursor: not-allowed;
         }
-        #preview {
-            display: none;
-            max-width: 100%;
-            border-radius: 10px;
-            border: 3px solid #e91e63;
-        }
-        #record-button {
-            background-color: #f44336;
-        }
-        #record-button.recording {
-            background-color: #4CAF50;
-        }
-        #video-preview {
-            display: none;
-            max-width: 100%;
-            border-radius: 10px;
-            border: 3px solid #e91e63;
-        }
-        .button-container {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
         .success-message {
             color: #4CAF50;
-            font-size: 18px;
+            font-size: 16px;
             margin: 10px 0;
             text-align: center;
             display: none;
+            padding: 10px;
+            background-color: rgba(232, 245, 233, 0.9);
+            border-radius: 8px;
+            width: 90%;
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         #switch-camera {
             background-color: #2196F3;
@@ -83,20 +119,78 @@
         #switch-camera:hover {
             background-color: #1976D2;
         }
+        #record-button {
+            background-color: #f44336;
+        }
+        #record-button.recording {
+            background-color: #4CAF50;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        h1 {
+            font-size: 24px;
+            text-align: center;
+            margin: 10px 0;
+            color: #e91e63;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+        .recording-timer {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            display: none;
+            z-index: 1000;
+        }
+        @media (orientation: landscape) {
+            #camera-container {
+                aspect-ratio: 16/9;
+                height: 70vh;
+            }
+            .button-container {
+                position: relative;
+                bottom: auto;
+                background: none;
+                backdrop-filter: none;
+                -webkit-backdrop-filter: none;
+            }
+        }
+        /* iOS fixes */
+        @supports (-webkit-touch-callout: none) {
+            html {
+                position: fixed;
+                height: 100%;
+                overflow: hidden;
+            }
+            body {
+                overflow: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+        }
     </style>
 </head>
 <body>
-    <h1>📸 ถ่ายรูปหรือวิดีโอของคุณ</h1>
+    <h1>📸 Valentine Camera</h1>
     <div id="camera-container">
         <video id="video" autoplay playsinline></video>
         <canvas id="canvas"></canvas>
         <img id="preview">
-        <video id="video-preview" controls></video>
+        <video id="video-preview" controls playsinline></video>
+        <div class="recording-timer" id="recording-timer">00:00</div>
     </div>
     <div class="button-container">
         <button id="switch-camera">🔄 สลับกล้อง</button>
         <button id="capture">📸 ถ่ายรูป</button>
-        <button id="record-button">🎥 บันทึกวิดีโอ</button>
+        <button id="record-button">🎥 วิดีโอ</button>
         <button id="retake" style="display: none;">🔄 ถ่ายใหม่</button>
         <button id="upload" style="display: none;">✉️ ส่งรูป</button>
         <button id="upload-video" style="display: none;">✉️ ส่งวิดีโอ</button>
@@ -117,16 +211,22 @@
         const uploadVideoButton = document.getElementById('upload-video');
         const switchButton = document.getElementById('switch-camera');
         const successMessage = document.getElementById('success-message');
+        const recordingTimer = document.getElementById('recording-timer');
         
         let stream;
         let mediaRecorder;
         let recordedChunks = [];
         let isRecording = false;
-        let facingMode = 'user';
+        let facingMode = 'user'; // เริ่มด้วยกล้องหน้า
+        let recordingStartTime;
+        let recordingInterval;
 
-        // ตรวจสอบว่าเบราว์เซอร์รองรับ MediaRecorder หรือไม่
-        function isMediaRecorderSupported() {
-            return typeof MediaRecorder !== 'undefined';
+        function updateRecordingTimer() {
+            const now = Date.now();
+            const duration = now - recordingStartTime;
+            const seconds = Math.floor((duration / 1000) % 60);
+            const minutes = Math.floor((duration / 1000 / 60) % 60);
+            recordingTimer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         }
 
         async function startCamera() {
@@ -135,22 +235,37 @@
             }
             
             try {
-                stream = await navigator.mediaDevices.getUserMedia({ 
+                const constraints = {
                     video: { 
                         facingMode: facingMode,
-                        width: { ideal: 1920 },
-                        height: { ideal: 1080 }
+                        width: { ideal: window.innerWidth },
+                        height: { ideal: window.innerHeight }
                     },
                     audio: true
-                });
+                };
+
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
                 video.srcObject = stream;
 
-                // ตรวจสอบและอัพเดทสถานะปุ่มบันทึกวิดีโอ
-                if (!isMediaRecorderSupported()) {
-                    recordButton.disabled = true;
-                    recordButton.title = 'เบราว์เซอร์ของคุณไม่รองรับการบันทึกวิดีโอ';
-                    console.error('MediaRecorder is not supported in this browser');
-                }
+                // รอให้วิดีโอโหลดเสร็จก่อนที่จะปรับขนาด
+                video.onloadedmetadata = () => {
+                    const videoAspectRatio = video.videoWidth / video.videoHeight;
+                    const containerAspectRatio = window.innerWidth / window.innerHeight;
+
+                    if (videoAspectRatio > containerAspectRatio) {
+                        video.style.width = '100%';
+                        video.style.height = 'auto';
+                    } else {
+                        video.style.width = 'auto';
+                        video.style.height = '100%';
+                    }
+                };
+
+                // เช็คว่าสามารถใช้งานกล้องหน้า/หลังได้หรือไม่
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const videoDevices = devices.filter(device => device.kind === 'videoinput');
+                switchButton.style.display = videoDevices.length > 1 ? 'block' : 'none';
+
             } catch (err) {
                 console.error("Error accessing camera:", err);
                 alert("ไม่สามารถเข้าถึงกล้องได้ กรุณาอนุญาตการใช้งานกล้องและไมโครโฟน");
@@ -171,85 +286,60 @@
             video.style.display = 'none';
             preview.style.display = 'block';
             captureButton.style.display = 'none';
+            recordButton.style.display = 'none';
             switchButton.style.display = 'none';
             retakeButton.style.display = 'inline';
             uploadButton.style.display = 'inline';
             successMessage.style.display = 'none';
         });
 
-        retakeButton.addEventListener('click', () => {
-            video.style.display = 'block';
-            preview.style.display = 'none';
-            captureButton.style.display = 'inline';
-            switchButton.style.display = 'inline';
-            retakeButton.style.display = 'none';
-            uploadButton.style.display = 'none';
-            successMessage.style.display = 'none';
-        });
-
         recordButton.addEventListener('click', async () => {
             try {
-                if (!isMediaRecorderSupported()) {
-                    alert('เบราว์เซอร์ของคุณไม่รองรับการบันทึกวิดีโอ');
-                    return;
-                }
-
-                if (!stream) {
-                    alert('ไม่พบกล้อง กรุณารีเฟรชหน้าเว็บและอนุญาตการใช้งานกล้อง');
-                    return;
-                }
-
                 if (!isRecording) {
                     // เริ่มการบันทึก
-                    try {
-                        mediaRecorder = new MediaRecorder(stream, {
-                            mimeType: 'video/webm;codecs=vp8,opus'
-                        });
-                    } catch (e) {
-                        console.error('Error creating MediaRecorder:', e);
-                        alert('ไม่สามารถสร้าง MediaRecorder ได้ กรุณาลองใช้เบราว์เซอร์อื่น เช่น Chrome หรือ Edge');
-                        return;
-                    }
-
+                    mediaRecorder = new MediaRecorder(stream, {
+                        mimeType: 'video/webm;codecs=vp8,opus'
+                    });
                     recordedChunks = [];
                     
                     mediaRecorder.ondataavailable = (event) => {
                         if (event.data && event.data.size > 0) {
                             recordedChunks.push(event.data);
-                            console.log('Received video chunk:', event.data.size, 'bytes');
                         }
                     };
                     
                     mediaRecorder.onstop = () => {
-                        console.log('MediaRecorder stopped, chunks:', recordedChunks.length);
                         const blob = new Blob(recordedChunks, { type: 'video/webm' });
                         videoPreview.src = URL.createObjectURL(blob);
                     };
-
-                    // ตั้งค่าให้เก็บข้อมูลทุก 1 วินาที
-                    mediaRecorder.start(1000);
-                    console.log('MediaRecorder started');
                     
+                    mediaRecorder.start(1000);
                     isRecording = true;
-                    recordButton.textContent = '⏹️ หยุดบันทึก';
+                    recordButton.textContent = '⏹️ หยุด';
                     recordButton.classList.add('recording');
-                    captureButton.disabled = true;
-                    switchButton.disabled = true;
+                    captureButton.style.display = 'none';
+                    switchButton.style.display = 'none';
+                    
+                    // เริ่มจับเวลา
+                    recordingStartTime = Date.now();
+                    recordingTimer.style.display = 'block';
+                    recordingInterval = setInterval(updateRecordingTimer, 1000);
+                    
                 } else {
                     // หยุดการบันทึก
                     if (mediaRecorder && mediaRecorder.state !== 'inactive') {
                         mediaRecorder.stop();
-                        console.log('MediaRecorder stopped');
+                        clearInterval(recordingInterval);
+                        recordingTimer.style.display = 'none';
                     }
+                    
                     isRecording = false;
-                    recordButton.textContent = '🎥 บันทึกวิดีโอ';
+                    recordButton.textContent = '🎥 วิดีโอ';
                     recordButton.classList.remove('recording');
                     
                     video.style.display = 'none';
                     videoPreview.style.display = 'block';
                     recordButton.style.display = 'none';
-                    captureButton.style.display = 'none';
-                    switchButton.style.display = 'none';
                     retakeButton.style.display = 'inline';
                     uploadVideoButton.style.display = 'inline';
                 }
@@ -257,6 +347,19 @@
                 console.error('Error in record button click handler:', error);
                 alert('เกิดข้อผิดพลาดในการบันทึกวิดีโอ: ' + error.message);
             }
+        });
+
+        retakeButton.addEventListener('click', () => {
+            video.style.display = 'block';
+            preview.style.display = 'none';
+            videoPreview.style.display = 'none';
+            captureButton.style.display = 'inline';
+            recordButton.style.display = 'inline';
+            switchButton.style.display = 'inline';
+            retakeButton.style.display = 'none';
+            uploadButton.style.display = 'none';
+            uploadVideoButton.style.display = 'none';
+            successMessage.style.display = 'none';
         });
 
         uploadButton.addEventListener('click', async () => {
@@ -267,79 +370,92 @@
                 const response = await fetch('/upload_photo', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
                         image: preview.src
                     })
                 });
                 
-                if (response.ok) {
-                    // แสดงข้อความสำเร็จ
+                const data = await response.json();
+                if (data.success) {
                     successMessage.style.display = 'block';
+                    
                     // รีเซ็ตกลับไปที่หน้ากล้อง
                     video.style.display = 'block';
                     preview.style.display = 'none';
                     captureButton.style.display = 'inline';
+                    recordButton.style.display = 'inline';
                     switchButton.style.display = 'inline';
                     retakeButton.style.display = 'none';
                     uploadButton.style.display = 'none';
-                    uploadButton.disabled = false;
-                    uploadButton.textContent = '✉️ ส่งรูป';
-                    
-                    // ซ่อนข้อความสำเร็จหลังจาก 3 วินาที
-                    setTimeout(() => {
-                        successMessage.style.display = 'none';
-                    }, 3000);
-                } else {
-                    throw new Error('Upload failed');
                 }
             } catch (error) {
-                alert('เกิดข้อผิดพลาดในการส่งรูป กรุณาลองใหม่อีกครั้ง');
+                console.error('Error uploading photo:', error);
+                alert('เกิดข้อผิดพลาดในการส่งรูป');
+            } finally {
                 uploadButton.disabled = false;
                 uploadButton.textContent = '✉️ ส่งรูป';
             }
         });
 
         uploadVideoButton.addEventListener('click', async () => {
-            const blob = new Blob(recordedChunks, { type: 'video/webm' });
-            const reader = new FileReader();
+            uploadVideoButton.disabled = true;
+            uploadVideoButton.textContent = '⏳ กำลังส่ง...';
             
-            reader.onloadend = async () => {
-                try {
-                    const response = await fetch('/upload_video', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            video: reader.result
-                        })
-                    });
-                    
-                    const data = await response.json();
-                    if (data.success) {
-                        successMessage.textContent = 'ส่งวิดีโอสำเร็จ! ✨ บันทึกวิดีโอใหม่ได้เลย';
-                        successMessage.style.display = 'block';
+            try {
+                const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                const reader = new FileReader();
+                
+                reader.onloadend = async () => {
+                    try {
+                        const response = await fetch('/upload_video', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                video: reader.result
+                            })
+                        });
                         
-                        // รีเซ็ตกลับไปที่หน้ากล้อง
-                        video.style.display = 'block';
-                        videoPreview.style.display = 'none';
-                        recordButton.style.display = 'inline';
-                        captureButton.style.display = 'inline';
-                        switchButton.style.display = 'inline';
-                        retakeButton.style.display = 'none';
-                        uploadVideoButton.style.display = 'none';
-                        captureButton.disabled = false;
-                        switchButton.disabled = false;
+                        const data = await response.json();
+                        if (data.success) {
+                            successMessage.textContent = 'ส่งวิดีโอสำเร็จ! ✨';
+                            successMessage.style.display = 'block';
+                            
+                            // รีเซ็ตกลับไปที่หน้ากล้อง
+                            video.style.display = 'block';
+                            videoPreview.style.display = 'none';
+                            captureButton.style.display = 'inline';
+                            recordButton.style.display = 'inline';
+                            switchButton.style.display = 'inline';
+                            retakeButton.style.display = 'none';
+                            uploadVideoButton.style.display = 'none';
+                        }
+                    } catch (error) {
+                        console.error('Error uploading video:', error);
+                        alert('เกิดข้อผิดพลาดในการส่งวิดีโอ');
+                    } finally {
+                        uploadVideoButton.disabled = false;
+                        uploadVideoButton.textContent = '✉️ ส่งวิดีโอ';
                     }
-                } catch (error) {
-                    console.error('Error uploading video:', error);
-                    alert('เกิดข้อผิดพลาดในการส่งวิดีโอ');
-                }
-            };
-            
-            reader.readAsDataURL(blob);
+                };
+                
+                reader.readAsDataURL(blob);
+            } catch (error) {
+                console.error('Error preparing video:', error);
+                alert('เกิดข้อผิดพลาดในการเตรียมวิดีโอ');
+                uploadVideoButton.disabled = false;
+                uploadVideoButton.textContent = '✉️ ส่งวิดีโอ';
+            }
+        });
+
+        // เพิ่ม event listener สำหรับการหมุนหน้าจอ
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => {
+                startCamera();
+            }, 300);
         });
 
         // เริ่มต้นกล้อง
