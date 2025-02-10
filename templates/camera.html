@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>ถ่ายรูป</title>
+    <title>ถ่ายรูปหรือวิดีโอ</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         body {
@@ -51,6 +51,18 @@
             border-radius: 10px;
             border: 3px solid #e91e63;
         }
+        #record-button {
+            background-color: #f44336;
+        }
+        #record-button.recording {
+            background-color: #4CAF50;
+        }
+        #video-preview {
+            display: none;
+            max-width: 100%;
+            border-radius: 10px;
+            border: 3px solid #e91e63;
+        }
         .button-container {
             display: flex;
             gap: 10px;
@@ -74,17 +86,20 @@
     </style>
 </head>
 <body>
-    <h1>📸 ถ่ายรูปของคุณ</h1>
+    <h1>📸 ถ่ายรูปหรือวิดีโอของคุณ</h1>
     <div id="camera-container">
         <video id="video" autoplay playsinline></video>
         <canvas id="canvas"></canvas>
         <img id="preview">
+        <video id="video-preview" controls></video>
     </div>
     <div class="button-container">
         <button id="switch-camera">🔄 สลับกล้อง</button>
         <button id="capture">📸 ถ่ายรูป</button>
+        <button id="record-button">🎥 บันทึกวิดีโอ</button>
         <button id="retake" style="display: none;">🔄 ถ่ายใหม่</button>
         <button id="upload" style="display: none;">✉️ ส่งรูป</button>
+        <button id="upload-video" style="display: none;">✉️ ส่งวิดีโอ</button>
     </div>
     <div id="success-message" class="success-message">
         ส่งรูปสำเร็จ! ✨ ถ่ายรูปใหม่ได้เลย
@@ -94,13 +109,19 @@
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
         const preview = document.getElementById('preview');
+        const videoPreview = document.getElementById('video-preview');
         const captureButton = document.getElementById('capture');
+        const recordButton = document.getElementById('record-button');
         const retakeButton = document.getElementById('retake');
         const uploadButton = document.getElementById('upload');
+        const uploadVideoButton = document.getElementById('upload-video');
         const switchButton = document.getElementById('switch-camera');
         const successMessage = document.getElementById('success-message');
         
         let stream;
+        let mediaRecorder;
+        let recordedChunks = [];
+        let isRecording = false;
         let facingMode = 'user'; // เริ่มต้นด้วยกล้องหน้า
 
         async function startCamera() {
@@ -114,7 +135,8 @@
                         facingMode: facingMode,
                         width: { ideal: 1920 },
                         height: { ideal: 1080 }
-                    }
+                    },
+                    audio: true
                 });
                 video.srcObject = stream;
             } catch (err) {
@@ -151,6 +173,48 @@
             retakeButton.style.display = 'none';
             uploadButton.style.display = 'none';
             successMessage.style.display = 'none';
+        });
+
+        recordButton.addEventListener('click', () => {
+            if (!isRecording) {
+                // เริ่มการบันทึก
+                mediaRecorder = new MediaRecorder(stream, {
+                    mimeType: 'video/webm;codecs=vp8,opus'
+                });
+                recordedChunks = [];
+                
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        recordedChunks.push(event.data);
+                    }
+                };
+                
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                    videoPreview.src = URL.createObjectURL(blob);
+                };
+                
+                mediaRecorder.start();
+                isRecording = true;
+                recordButton.textContent = '⏹️ หยุดบันทึก';
+                recordButton.classList.add('recording');
+                captureButton.disabled = true;
+                switchButton.disabled = true;
+            } else {
+                // หยุดการบันทึก
+                mediaRecorder.stop();
+                isRecording = false;
+                recordButton.textContent = '🎥 บันทึกวิดีโอ';
+                recordButton.classList.remove('recording');
+                
+                video.style.display = 'none';
+                videoPreview.style.display = 'block';
+                recordButton.style.display = 'none';
+                captureButton.style.display = 'none';
+                switchButton.style.display = 'none';
+                retakeButton.style.display = 'inline';
+                uploadVideoButton.style.display = 'inline';
+            }
         });
 
         uploadButton.addEventListener('click', async () => {
@@ -193,6 +257,47 @@
                 uploadButton.disabled = false;
                 uploadButton.textContent = '✉️ ส่งรูป';
             }
+        });
+
+        uploadVideoButton.addEventListener('click', async () => {
+            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+            const reader = new FileReader();
+            
+            reader.onloadend = async () => {
+                try {
+                    const response = await fetch('/upload_video', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            video: reader.result
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    if (data.success) {
+                        successMessage.textContent = 'ส่งวิดีโอสำเร็จ! ✨ บันทึกวิดีโอใหม่ได้เลย';
+                        successMessage.style.display = 'block';
+                        
+                        // รีเซ็ตกลับไปที่หน้ากล้อง
+                        video.style.display = 'block';
+                        videoPreview.style.display = 'none';
+                        recordButton.style.display = 'inline';
+                        captureButton.style.display = 'inline';
+                        switchButton.style.display = 'inline';
+                        retakeButton.style.display = 'none';
+                        uploadVideoButton.style.display = 'none';
+                        captureButton.disabled = false;
+                        switchButton.disabled = false;
+                    }
+                } catch (error) {
+                    console.error('Error uploading video:', error);
+                    alert('เกิดข้อผิดพลาดในการส่งวิดีโอ');
+                }
+            };
+            
+            reader.readAsDataURL(blob);
         });
 
         // เริ่มต้นกล้อง

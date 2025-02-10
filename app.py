@@ -15,8 +15,9 @@ if not os.path.exists(UPLOAD_FOLDER):
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # จำกัดขนาดไฟล์ที่อัพโหลดไม่เกิน 16MB
 
-# Store the latest photo information
+# Store the latest media information
 latest_photo = None
+latest_video = None
 
 def add_valentine_frame(image_data):
     # แปลง base64 เป็นรูปภาพ
@@ -103,9 +104,42 @@ def upload_photo():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/upload_video', methods=['POST'])
+def upload_video():
+    global latest_video
+    
+    try:
+        data = request.json
+        if not data or 'video' not in data:
+            return jsonify({'error': 'No video data provided'}), 400
+        
+        # สร้างชื่อไฟล์ด้วยเวลาปัจจุบัน
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        filename = f'video_{timestamp}.webm'
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        
+        # บันทึกวิดีโอ
+        video_data = base64.b64decode(data['video'].split(',')[1])
+        with open(filepath, 'wb') as f:
+            f.write(video_data)
+        
+        # อัพเดทวิดีโอล่าสุด
+        latest_video = {
+            'filepath': f'/static/uploads/{filename}',
+            'timestamp': timestamp
+        }
+        
+        return jsonify({'success': True, 'filepath': latest_video['filepath']})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/get_latest_photo')
 def get_latest_photo():
     return jsonify(latest_photo if latest_photo else {'filepath': None})
+
+@app.route('/get_latest_video')
+def get_latest_video():
+    return jsonify(latest_video if latest_video else {'filepath': None})
 
 if __name__ == '__main__':
     # ใช้ port จาก environment variable ถ้ามี (สำหรับ production)
