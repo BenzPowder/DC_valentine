@@ -41,6 +41,10 @@
         button:hover {
             background-color: #c2185b;
         }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
         #preview {
             display: none;
             max-width: 100%;
@@ -51,20 +55,39 @@
             display: flex;
             gap: 10px;
             margin-top: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .success-message {
+            color: #4CAF50;
+            font-size: 18px;
+            margin: 10px 0;
+            text-align: center;
+            display: none;
+        }
+        #switch-camera {
+            background-color: #2196F3;
+        }
+        #switch-camera:hover {
+            background-color: #1976D2;
         }
     </style>
 </head>
 <body>
     <h1>📸 ถ่ายรูปของคุณ</h1>
     <div id="camera-container">
-        <video id="video" autoplay></video>
+        <video id="video" autoplay playsinline></video>
         <canvas id="canvas"></canvas>
         <img id="preview">
     </div>
     <div class="button-container">
+        <button id="switch-camera">🔄 สลับกล้อง</button>
         <button id="capture">📸 ถ่ายรูป</button>
         <button id="retake" style="display: none;">🔄 ถ่ายใหม่</button>
         <button id="upload" style="display: none;">✉️ ส่งรูป</button>
+    </div>
+    <div id="success-message" class="success-message">
+        ส่งรูปสำเร็จ! ✨ ถ่ายรูปใหม่ได้เลย
     </div>
 
     <script>
@@ -74,12 +97,24 @@
         const captureButton = document.getElementById('capture');
         const retakeButton = document.getElementById('retake');
         const uploadButton = document.getElementById('upload');
+        const switchButton = document.getElementById('switch-camera');
+        const successMessage = document.getElementById('success-message');
+        
         let stream;
+        let facingMode = 'user'; // เริ่มต้นด้วยกล้องหน้า
 
         async function startCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            
             try {
                 stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: 'environment' }  // ใช้กล้องหลังถ้ามี
+                    video: { 
+                        facingMode: facingMode,
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 }
+                    }
                 });
                 video.srcObject = stream;
             } catch (err) {
@@ -88,11 +123,10 @@
             }
         }
 
-        function stopCamera() {
-            if (stream) {
-                stream.getTracks().forEach(track => track.stop());
-            }
-        }
+        switchButton.addEventListener('click', () => {
+            facingMode = facingMode === 'user' ? 'environment' : 'user';
+            startCamera();
+        });
 
         captureButton.addEventListener('click', () => {
             canvas.width = video.videoWidth;
@@ -103,16 +137,20 @@
             video.style.display = 'none';
             preview.style.display = 'block';
             captureButton.style.display = 'none';
+            switchButton.style.display = 'none';
             retakeButton.style.display = 'inline';
             uploadButton.style.display = 'inline';
+            successMessage.style.display = 'none';
         });
 
         retakeButton.addEventListener('click', () => {
             video.style.display = 'block';
             preview.style.display = 'none';
             captureButton.style.display = 'inline';
+            switchButton.style.display = 'inline';
             retakeButton.style.display = 'none';
             uploadButton.style.display = 'none';
+            successMessage.style.display = 'none';
         });
 
         uploadButton.addEventListener('click', async () => {
@@ -131,7 +169,22 @@
                 });
                 
                 if (response.ok) {
-                    window.location.href = '/dashboard';
+                    // แสดงข้อความสำเร็จ
+                    successMessage.style.display = 'block';
+                    // รีเซ็ตกลับไปที่หน้ากล้อง
+                    video.style.display = 'block';
+                    preview.style.display = 'none';
+                    captureButton.style.display = 'inline';
+                    switchButton.style.display = 'inline';
+                    retakeButton.style.display = 'none';
+                    uploadButton.style.display = 'none';
+                    uploadButton.disabled = false;
+                    uploadButton.textContent = '✉️ ส่งรูป';
+                    
+                    // ซ่อนข้อความสำเร็จหลังจาก 3 วินาที
+                    setTimeout(() => {
+                        successMessage.style.display = 'none';
+                    }, 3000);
                 } else {
                     throw new Error('Upload failed');
                 }
@@ -142,6 +195,7 @@
             }
         });
 
+        // เริ่มต้นกล้อง
         startCamera();
     </script>
 </body>

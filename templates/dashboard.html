@@ -38,6 +38,11 @@
             object-fit: contain;
             padding: 20px;
             box-sizing: border-box;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+        .latest-photo.visible {
+            opacity: 1;
         }
         .no-photo {
             color: #e91e63;
@@ -91,7 +96,6 @@
                 heart.style.fontSize = (Math.random() * 20 + 15) + 'px';
                 container.appendChild(heart);
                 
-                // เมื่อแอนิเมชันจบ ให้สร้างหัวใจใหม่
                 heart.addEventListener('animationend', () => {
                     heart.remove();
                     createOneHeart();
@@ -114,6 +118,8 @@
             });
         }
 
+        let currentPhotoPath = null;
+
         async function updateLatestPhoto() {
             try {
                 const response = await fetch('/get_latest_photo');
@@ -122,13 +128,26 @@
                 const noPhoto = document.getElementById('no-photo');
                 
                 if (data.filepath) {
-                    img.src = data.filepath;
+                    // ถ้ามีรูปใหม่และไม่ใช่รูปเดิม
+                    if (data.filepath !== currentPhotoPath) {
+                        img.style.opacity = '0';  // ทำให้จางก่อน
+                        
+                        // รอให้การเปลี่ยน opacity เสร็จสิ้น
+                        setTimeout(() => {
+                            img.src = data.filepath;
+                            img.style.opacity = '1';  // แสดงรูปใหม่
+                            currentPhotoPath = data.filepath;
+                        }, 500);
+                    }
+                    
                     img.style.display = 'block';
                     noPhoto.style.display = 'none';
-                } else {
+                } else if (!currentPhotoPath) {
+                    // แสดง no-photo เฉพาะเมื่อไม่เคยมีรูปมาก่อน
                     img.style.display = 'none';
                     noPhoto.style.display = 'block';
                 }
+                // ถ้าไม่มีรูปใหม่และมีรูปเก่าอยู่ ให้แสดงรูปเก่าต่อไป
             } catch (error) {
                 console.error('Error fetching latest photo:', error);
             }
