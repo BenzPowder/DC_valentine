@@ -122,7 +122,12 @@
         let mediaRecorder;
         let recordedChunks = [];
         let isRecording = false;
-        let facingMode = 'user'; // เริ่มต้นด้วยกล้องหน้า
+        let facingMode = 'user';
+
+        // ตรวจสอบว่าเบราว์เซอร์รองรับ MediaRecorder หรือไม่
+        function isMediaRecorderSupported() {
+            return typeof MediaRecorder !== 'undefined';
+        }
 
         async function startCamera() {
             if (stream) {
@@ -139,9 +144,16 @@
                     audio: true
                 });
                 video.srcObject = stream;
+
+                // ตรวจสอบและอัพเดทสถานะปุ่มบันทึกวิดีโอ
+                if (!isMediaRecorderSupported()) {
+                    recordButton.disabled = true;
+                    recordButton.title = 'เบราว์เซอร์ของคุณไม่รองรับการบันทึกวิดีโอ';
+                    console.error('MediaRecorder is not supported in this browser');
+                }
             } catch (err) {
                 console.error("Error accessing camera:", err);
-                alert("ไม่สามารถเข้าถึงกล้องได้ กรุณาอนุญาตการใช้งานกล้อง");
+                alert("ไม่สามารถเข้าถึงกล้องได้ กรุณาอนุญาตการใช้งานกล้องและไมโครโฟน");
             }
         }
 
@@ -175,45 +187,75 @@
             successMessage.style.display = 'none';
         });
 
-        recordButton.addEventListener('click', () => {
-            if (!isRecording) {
-                // เริ่มการบันทึก
-                mediaRecorder = new MediaRecorder(stream, {
-                    mimeType: 'video/webm;codecs=vp8,opus'
-                });
-                recordedChunks = [];
-                
-                mediaRecorder.ondataavailable = (event) => {
-                    if (event.data.size > 0) {
-                        recordedChunks.push(event.data);
+        recordButton.addEventListener('click', async () => {
+            try {
+                if (!isMediaRecorderSupported()) {
+                    alert('เบราว์เซอร์ของคุณไม่รองรับการบันทึกวิดีโอ');
+                    return;
+                }
+
+                if (!stream) {
+                    alert('ไม่พบกล้อง กรุณารีเฟรชหน้าเว็บและอนุญาตการใช้งานกล้อง');
+                    return;
+                }
+
+                if (!isRecording) {
+                    // เริ่มการบันทึก
+                    try {
+                        mediaRecorder = new MediaRecorder(stream, {
+                            mimeType: 'video/webm;codecs=vp8,opus'
+                        });
+                    } catch (e) {
+                        console.error('Error creating MediaRecorder:', e);
+                        alert('ไม่สามารถสร้าง MediaRecorder ได้ กรุณาลองใช้เบราว์เซอร์อื่น เช่น Chrome หรือ Edge');
+                        return;
                     }
-                };
-                
-                mediaRecorder.onstop = () => {
-                    const blob = new Blob(recordedChunks, { type: 'video/webm' });
-                    videoPreview.src = URL.createObjectURL(blob);
-                };
-                
-                mediaRecorder.start();
-                isRecording = true;
-                recordButton.textContent = '⏹️ หยุดบันทึก';
-                recordButton.classList.add('recording');
-                captureButton.disabled = true;
-                switchButton.disabled = true;
-            } else {
-                // หยุดการบันทึก
-                mediaRecorder.stop();
-                isRecording = false;
-                recordButton.textContent = '🎥 บันทึกวิดีโอ';
-                recordButton.classList.remove('recording');
-                
-                video.style.display = 'none';
-                videoPreview.style.display = 'block';
-                recordButton.style.display = 'none';
-                captureButton.style.display = 'none';
-                switchButton.style.display = 'none';
-                retakeButton.style.display = 'inline';
-                uploadVideoButton.style.display = 'inline';
+
+                    recordedChunks = [];
+                    
+                    mediaRecorder.ondataavailable = (event) => {
+                        if (event.data && event.data.size > 0) {
+                            recordedChunks.push(event.data);
+                            console.log('Received video chunk:', event.data.size, 'bytes');
+                        }
+                    };
+                    
+                    mediaRecorder.onstop = () => {
+                        console.log('MediaRecorder stopped, chunks:', recordedChunks.length);
+                        const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                        videoPreview.src = URL.createObjectURL(blob);
+                    };
+
+                    // ตั้งค่าให้เก็บข้อมูลทุก 1 วินาที
+                    mediaRecorder.start(1000);
+                    console.log('MediaRecorder started');
+                    
+                    isRecording = true;
+                    recordButton.textContent = '⏹️ หยุดบันทึก';
+                    recordButton.classList.add('recording');
+                    captureButton.disabled = true;
+                    switchButton.disabled = true;
+                } else {
+                    // หยุดการบันทึก
+                    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                        mediaRecorder.stop();
+                        console.log('MediaRecorder stopped');
+                    }
+                    isRecording = false;
+                    recordButton.textContent = '🎥 บันทึกวิดีโอ';
+                    recordButton.classList.remove('recording');
+                    
+                    video.style.display = 'none';
+                    videoPreview.style.display = 'block';
+                    recordButton.style.display = 'none';
+                    captureButton.style.display = 'none';
+                    switchButton.style.display = 'none';
+                    retakeButton.style.display = 'inline';
+                    uploadVideoButton.style.display = 'inline';
+                }
+            } catch (error) {
+                console.error('Error in record button click handler:', error);
+                alert('เกิดข้อผิดพลาดในการบันทึกวิดีโอ: ' + error.message);
             }
         });
 
