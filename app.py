@@ -61,8 +61,7 @@ def add_valentine_frame(image_data):
 
 @app.route('/')
 def index():
-    # Redirect to camera page
-    return render_template('camera.html')
+    return render_template('index.html')
 
 @app.route('/camera')
 def camera():

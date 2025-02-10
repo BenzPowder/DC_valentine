@@ -90,6 +90,7 @@
         button:hover {
             background-color: #c2185b;
         }
+<<<<<<< HEAD
         button:disabled {
             background-color: #ccc;
             cursor: not-allowed;
@@ -118,6 +119,18 @@
         }
         #switch-camera:hover {
             background-color: #1976D2;
+=======
+        #preview {
+            display: none;
+            max-width: 100%;
+            border-radius: 10px;
+            border: 3px solid #e91e63;
+        }
+        .button-container {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+>>>>>>> parent of 6bd6cc8 (add file)
         }
         #record-button {
             background-color: #f44336;
@@ -181,22 +194,18 @@
 <body>
     <h1>📸 Valentine Camera</h1>
     <div id="camera-container">
-        <video id="video" autoplay playsinline></video>
+        <video id="video" autoplay></video>
         <canvas id="canvas"></canvas>
         <img id="preview">
         <video id="video-preview" controls playsinline></video>
         <div class="recording-timer" id="recording-timer">00:00</div>
     </div>
     <div class="button-container">
-        <button id="switch-camera">🔄 สลับกล้อง</button>
         <button id="capture">📸 ถ่ายรูป</button>
         <!-- <button id="record-button">🎥 วิดีโอ</button> -->
         <button id="retake" style="display: none;">🔄 ถ่ายใหม่</button>
         <button id="upload" style="display: none;">✉️ ส่งรูป</button>
         <!-- <button id="upload-video" style="display: none;">✉️ ส่งวิดีโอ</button> -->
-    </div>
-    <div id="success-message" class="success-message">
-        ส่งรูปสำเร็จ! ✨ ถ่ายรูปใหม่ได้เลย
     </div>
 
     <script>
@@ -208,6 +217,7 @@
         const recordButton = document.getElementById('record-button');
         const retakeButton = document.getElementById('retake');
         const uploadButton = document.getElementById('upload');
+<<<<<<< HEAD
         const uploadVideoButton = document.getElementById('upload-video');
         const switchButton = document.getElementById('switch-camera');
         const successMessage = document.getElementById('success-message');
@@ -228,13 +238,13 @@
             const minutes = Math.floor((duration / 1000 / 60) % 60);
             recordingTimer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         }
+=======
+        let stream;
+>>>>>>> parent of 6bd6cc8 (add file)
 
         async function startCamera() {
-            if (stream) {
-                stream.getTracks().forEach(track => track.stop());
-            }
-            
             try {
+<<<<<<< HEAD
                 const constraints = {
                     video: { 
                         facingMode: facingMode,
@@ -245,6 +255,11 @@
                 };
 
                 stream = await navigator.mediaDevices.getUserMedia(constraints);
+=======
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment' }  // ใช้กล้องหลังถ้ามี
+                });
+>>>>>>> parent of 6bd6cc8 (add file)
                 video.srcObject = stream;
 
                 // รอให้วิดีโอโหลดเสร็จก่อนที่จะปรับขนาด
@@ -272,10 +287,11 @@
             }
         }
 
-        switchButton.addEventListener('click', () => {
-            facingMode = facingMode === 'user' ? 'environment' : 'user';
-            startCamera();
-        });
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+        }
 
         captureButton.addEventListener('click', () => {
             canvas.width = video.videoWidth;
@@ -286,11 +302,13 @@
             video.style.display = 'none';
             preview.style.display = 'block';
             captureButton.style.display = 'none';
+<<<<<<< HEAD
             recordButton.style.display = 'none';
             switchButton.style.display = 'none';
+=======
+>>>>>>> parent of 6bd6cc8 (add file)
             retakeButton.style.display = 'inline';
             uploadButton.style.display = 'inline';
-            successMessage.style.display = 'none';
         });
 
         recordButton.addEventListener('click', async () => {
@@ -354,12 +372,17 @@
             preview.style.display = 'none';
             videoPreview.style.display = 'none';
             captureButton.style.display = 'inline';
+<<<<<<< HEAD
             recordButton.style.display = 'inline';
             switchButton.style.display = 'inline';
             retakeButton.style.display = 'none';
             uploadButton.style.display = 'none';
             uploadVideoButton.style.display = 'none';
             successMessage.style.display = 'none';
+=======
+            retakeButton.style.display = 'none';
+            uploadButton.style.display = 'none';
+>>>>>>> parent of 6bd6cc8 (add file)
         });
 
         uploadButton.addEventListener('click', async () => {
@@ -377,6 +400,7 @@
                     })
                 });
                 
+<<<<<<< HEAD
                 const data = await response.json();
                 if (data.success) {
                     successMessage.style.display = 'block';
@@ -389,6 +413,12 @@
                     switchButton.style.display = 'inline';
                     retakeButton.style.display = 'none';
                     uploadButton.style.display = 'none';
+=======
+                if (response.ok) {
+                    window.location.href = '/dashboard';
+                } else {
+                    throw new Error('Upload failed');
+>>>>>>> parent of 6bd6cc8 (add file)
                 }
             } catch (error) {
                 console.error('Error uploading photo:', error);
@@ -399,6 +429,7 @@
             }
         });
 
+<<<<<<< HEAD
         uploadVideoButton.addEventListener('click', async () => {
             uploadVideoButton.disabled = true;
             uploadVideoButton.textContent = '⏳ กำลังส่ง...';
@@ -459,6 +490,8 @@
         });
 
         // เริ่มต้นกล้อง
+=======
+>>>>>>> parent of 6bd6cc8 (add file)
         startCamera();
     </script>
 </body>

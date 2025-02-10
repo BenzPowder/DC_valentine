@@ -74,11 +74,6 @@
             object-fit: contain;
             padding: 20px;
             box-sizing: border-box;
-            opacity: 0;
-            transition: opacity 0.5s ease-in-out;
-        }
-        .latest-photo.visible {
-            opacity: 1;
         }
         .no-photo {
             color: #e91e63;
@@ -139,6 +134,7 @@
                 heart.style.fontSize = (Math.random() * 20 + 15) + 'px';
                 container.appendChild(heart);
                 
+                // เมื่อแอนิเมชันจบ ให้สร้างหัวใจใหม่
                 heart.addEventListener('animationend', () => {
                     heart.remove();
                     createOneHeart();
@@ -161,8 +157,6 @@
             });
         }
 
-        let currentPhotoPath = null;
-
         async function updateLatestPhoto() {
             try {
                 const response = await fetch('/get_latest_photo');
@@ -171,6 +165,7 @@
                 const noPhoto = document.getElementById('no-photo');
                 
                 if (data.filepath) {
+<<<<<<< HEAD
                     if (data.filepath !== currentPhotoPath) {
                         img.style.opacity = '0';  
                         setTimeout(() => {
@@ -183,6 +178,12 @@
                     img.style.display = 'block';
                     noPhoto.style.display = 'none';
                 } else if (!currentPhotoPath) {
+=======
+                    img.src = data.filepath;
+                    img.style.display = 'block';
+                    noPhoto.style.display = 'none';
+                } else {
+>>>>>>> parent of 6bd6cc8 (add file)
                     img.style.display = 'none';
                     noPhoto.style.display = 'block';
                 }
