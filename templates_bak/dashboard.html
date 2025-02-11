@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <title>Dashboard แสดงภาพ</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: 'Kanit', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #ffebee;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .title {
+            color: #e91e63;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .photo-frame {
+            position: relative;
+            width: 80vw;
+            height: 80vh;
+            max-width: 800px;
+            background-color: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(233, 30, 99, 0.2);
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* เพิ่มสติกเกอร์หัวใจ */
+        .sticker {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background-size: contain;
+            background-repeat: no-repeat;
+        }
+        
+        /* กำหนดตำแหน่งสติกเกอร์ */
+        .sticker.top-left {
+            top: 10px;
+            left: 10px;
+            transform: rotate(-15deg);
+            background-image: url('sticker_heart1.png');
+        }
+        .sticker.top-right {
+            top: 10px;
+            right: 10px;
+            transform: rotate(15deg);
+            background-image: url('sticker_heart2.png');
+        }
+        .sticker.bottom-left {
+            bottom: 10px;
+            left: 10px;
+            transform: rotate(-15deg);
+            background-image: url('sticker_heart3.png');
+        }
+        .sticker.bottom-right {
+            bottom: 10px;
+            right: 10px;
+            transform: rotate(15deg);
+            background-image: url('sticker_heart4.png');
+        }
+
+        .latest-photo {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .no-photo {
+            color: #e91e63;
+            font-size: 24px;
+            text-align: center;
+            padding: 20px;
+        }
+        .floating-hearts {
+            position: fixed;
+            pointer-events: none;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+        .heart {
+            position: absolute;
+            color: #ff69b4;
+            font-size: 24px;
+            animation: float 6s infinite;
+            opacity: 0.6;
+        }
+        @keyframes float {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0.6; }
+            100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <h1 class="title">❤️ Happy Valentine's Day ❤️</h1>
+    <div class="photo-frame">
+        <img id="latest-photo" class="latest-photo">
+        <div id="no-photo" class="no-photo" style="display: none;">
+            ยังไม่มีรูปภาพ<br>กรุณารอสักครู่...
+        </div>
+
+        <!-- สติกเกอร์ -->
+        <div class="sticker top-left"></div>
+        <div class="sticker top-right"></div>
+        <div class="sticker bottom-left"></div>
+        <div class="sticker bottom-right"></div>
+    </div>
+
+    <div class="floating-hearts" id="hearts-container"></div>
+
+    <script>
+        function createFloatingHearts() {
+            const container = document.getElementById('hearts-container');
+            const numberOfHearts = 20;
+            
+            for (let i = 0; i < numberOfHearts; i++) {
+                const heart = document.createElement('div');
+                heart.className = 'heart';
+                heart.innerHTML = '❤';
+                heart.style.left = Math.random() * 100 + '%';
+                heart.style.animationDelay = Math.random() * 5 + 's';
+                heart.style.fontSize = (Math.random() * 20 + 15) + 'px';
+                container.appendChild(heart);
+                
+                // เมื่อแอนิเมชันจบ ให้สร้างหัวใจใหม่
+                heart.addEventListener('animationend', () => {
+                    heart.remove();
+                    createOneHeart();
+                });
+            }
+        }
+
+        function createOneHeart() {
+            const container = document.getElementById('hearts-container');
+            const heart = document.createElement('div');
+            heart.className = 'heart';
+            heart.innerHTML = '❤';
+            heart.style.left = Math.random() * 100 + '%';
+            heart.style.fontSize = (Math.random() * 20 + 15) + 'px';
+            container.appendChild(heart);
+            
+            heart.addEventListener('animationend', () => {
+                heart.remove();
+                createOneHeart();
+            });
+        }
+
+        async function updateLatestPhoto() {
+            try {
+                const response = await fetch('/get_latest_photo');
+                const data = await response.json();
+                const img = document.getElementById('latest-photo');
+                const noPhoto = document.getElementById('no-photo');
+                
+                if (data.filepath) {
+<<<<<<< HEAD
+<<<<<<< HEAD
+                    if (data.filepath !== currentPhotoPath) {
+                        img.style.opacity = '0';  
+                        setTimeout(() => {
+                            img.src = data.filepath;
+                            img.style.opacity = '1';  
+                            currentPhotoPath = data.filepath;
+                        }, 500);
+                    }
+                    
+                    img.style.display = 'block';
+                    noPhoto.style.display = 'none';
+                } else if (!currentPhotoPath) {
+=======
+                    img.src = data.filepath;
+                    img.style.display = 'block';
+                    noPhoto.style.display = 'none';
+                } else {
+>>>>>>> parent of 6bd6cc8 (add file)
+=======
+                    img.src = data.filepath;
+                    img.style.display = 'block';
+                    noPhoto.style.display = 'none';
+                } else {
+>>>>>>> parent of 6bd6cc8 (add file)
+                    img.style.display = 'none';
+                    noPhoto.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error fetching latest photo:', error);
+            }
+        }
+
+        // เริ่มต้นสร้างหัวใจลอย
+        createFloatingHearts();
+        
+        // อัพเดทรูปภาพทุก 5 วินาที
+        updateLatestPhoto();
+        setInterval(updateLatestPhoto, 5000);
+    </script>
+</body>
+</html>
