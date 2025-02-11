@@ -1,75 +1,78 @@
 <!DOCTYPE html>
-<html>
+<html lang="th">
 <head>
     <title>ถ่ายรูป</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <style>
         body {
             font-family: 'Kanit', sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
             background-color: #ffebee;
+            min-height: 100vh;
+        }
+        h1 {
+            font-size: 24px;
+            text-align: center;
+            margin-bottom: 10px;
+            color: #e91e63;
         }
         #camera-container {
             position: relative;
             width: 100%;
-            max-width: 600px;
-            margin: 20px auto;
-        }
-        #video {
-            width: 100%;
+            max-width: 100%;
+            aspect-ratio: 3/4;
+            overflow: hidden;
+            background: black;
             border-radius: 10px;
-            border: 3px solid #e91e63;
+            margin: 10px 0;
         }
-        #canvas {
+        #video, #canvas, #preview {
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+            object-fit: cover;
+            display: block;
+        }
+        #canvas, #preview {
             display: none;
+        }
+        .button-container {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+            padding: 10px;
         }
         button {
             background-color: #e91e63;
             color: white;
             border: none;
-            padding: 15px 30px;
+            padding: 12px 24px;
             border-radius: 25px;
             cursor: pointer;
-            font-size: 18px;
-            margin: 10px;
-            font-family: 'Kanit', sans-serif;
+            font-size: 16px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            transition: transform 0.1s ease;
+            flex: 1 1 40%;
+            max-width: 160px;
+        }
+        button:active {
+            transform: scale(0.95);
         }
         button:hover {
             background-color: #c2185b;
         }
-        button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-        }
-        #preview {
-            display: none;
-            max-width: 100%;
-            border-radius: 10px;
-            border: 3px solid #e91e63;
-        }
-        .button-container {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
         .success-message {
             color: #4CAF50;
-            font-size: 18px;
+            font-size: 16px;
             margin: 10px 0;
             text-align: center;
             display: none;
-        }
-        #switch-camera {
-            background-color: #2196F3;
-        }
-        #switch-camera:hover {
-            background-color: #1976D2;
         }
     </style>
 </head>
@@ -101,7 +104,7 @@
         const successMessage = document.getElementById('success-message');
         
         let stream;
-        let facingMode = 'user'; // เริ่มต้นด้วยกล้องหน้า
+        let facingMode = 'user';  // เริ่มต้นด้วยกล้องหน้า
 
         async function startCamera() {
             if (stream) {
@@ -110,11 +113,7 @@
             
             try {
                 stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { 
-                        facingMode: facingMode,
-                        width: { ideal: 1920 },
-                        height: { ideal: 1080 }
-                    }
+                    video: { facingMode: facingMode }
                 });
                 video.srcObject = stream;
             } catch (err) {
@@ -160,18 +159,12 @@
             try {
                 const response = await fetch('/upload_photo', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        image: preview.src
-                    })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: preview.src })
                 });
                 
                 if (response.ok) {
-                    // แสดงข้อความสำเร็จ
                     successMessage.style.display = 'block';
-                    // รีเซ็ตกลับไปที่หน้ากล้อง
                     video.style.display = 'block';
                     preview.style.display = 'none';
                     captureButton.style.display = 'inline';
@@ -180,11 +173,6 @@
                     uploadButton.style.display = 'none';
                     uploadButton.disabled = false;
                     uploadButton.textContent = '✉️ ส่งรูป';
-                    
-                    // ซ่อนข้อความสำเร็จหลังจาก 3 วินาที
-                    setTimeout(() => {
-                        successMessage.style.display = 'none';
-                    }, 3000);
                 } else {
                     throw new Error('Upload failed');
                 }
@@ -195,7 +183,6 @@
             }
         });
 
-        // เริ่มต้นกล้อง
         startCamera();
     </script>
 </body>
