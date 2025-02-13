@@ -4,7 +4,6 @@ import base64
 from datetime import datetime
 from PIL import Image, ImageDraw, ImageFont
 import io
-import psycopg2
 from ftplib import FTP
 
 app = Flask(__name__)
@@ -62,8 +61,7 @@ def add_valentine_frame(image_data):
 
 @app.route('/')
 def index():
-    # Redirect to camera page
-    return render_template('camera.html')
+    return render_template('index.html')
 
 @app.route('/camera')
 def camera():
@@ -71,22 +69,8 @@ def camera():
 
 @app.route('/dashboard')
 def dashboard():
-    conn = psycopg2.connect(
-        host="host213.dungbhumi.com",
-        user="benz.supanat_ticket",
-        password="Aa!35741",
-        dbname="benz.supanat_ticket"
-    )
-    cursor = conn.cursor()
-    cursor.execute("SELECT image_data FROM images ORDER BY created_at DESC")
-    images = cursor.fetchall()
-    cursor.close()
-    conn.close()
-
-    # Convert binary data to base64 for HTML rendering
-    images_base64 = [base64.b64encode(image[0]).decode('utf-8') for image in images]
-
-    return render_template('dashboard.html', images=images_base64)
+    # Fetch images from FTP if needed or adjust logic
+    return render_template('dashboard.html')
 
 @app.route('/upload_photo', methods=['POST'])
 def upload_photo():
@@ -129,14 +113,15 @@ def upload_photo():
             'filepath': f'/static/uploads/{filename}',
             'timestamp': timestamp
         }
-        
-        return jsonify({'success': True, 'filepath': latest_photo['filepath']})
+
+        return jsonify({'success': True, 'message': 'Photo uploaded successfully.'})
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 @app.route('/get_latest_photo')
 def get_latest_photo():
-    return jsonify(latest_photo if latest_photo else {'filepath': None})
+    return jsonify(latest_photo)
 
 if __name__ == '__main__':
     # ใช้ port จาก environment variable ถ้ามี (สำหรับ production)
