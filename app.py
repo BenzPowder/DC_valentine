@@ -40,7 +40,26 @@ def add_valentine_frame(image_data):
     # เพิ่มกรอบวาเลนไทน์
     draw = ImageDraw.Draw(image)
     width, height = image.size
+    
+    # วาดกรอบสีแดง
     draw.rectangle([(0, 0), (width, height)], outline="red", width=5)
+    
+    # วาดเมฆ
+    cloud_color = "#D3D3D3"  # สีเทาอ่อน
+    draw.ellipse([(width * 0.1, height * 0.1), (width * 0.3, height * 0.2)], fill=cloud_color)
+    draw.ellipse([(width * 0.2, height * 0.15), (width * 0.4, height * 0.25)], fill=cloud_color)
+    
+    # วาดหัวใจ
+    heart_color = "#FF69B4"  # สีชมพู
+    heart_size = 20
+    for x, y in [(width * 0.7, height * 0.7), (width * 0.8, height * 0.8)]:
+        draw.polygon([
+            (x, y),
+            (x + heart_size, y - heart_size),
+            (x + 2 * heart_size, y),
+            (x + 1.5 * heart_size, y + heart_size),
+            (x + 0.5 * heart_size, y + heart_size)
+        ], fill=heart_color)
     
     # แปลงกลับเป็น base64
     buffered = io.BytesIO()

@@ -75,7 +75,7 @@
 <body>
     <h1 class="title">❤️ Happy Valentine's Day ❤️</h1>
     <div class="photo-frame">
-        <img id="latest-photo" class="latest-photo">
+        <img id="photo-display" class="latest-photo">
         <div id="no-photo" class="no-photo" style="display: none;">
             ยังไม่มีรูปภาพ<br>กรุณารอสักครู่...
         </div>
@@ -83,6 +83,24 @@
     <div class="floating-hearts" id="hearts-container"></div>
 
     <script>
+        let currentIndex = 0;
+        const images = {{ images|tojson }};
+
+        function updateImage() {
+            const imgElement = document.getElementById('photo-display');
+            if (images.length > 0) {
+                imgElement.src = 'data:image/jpeg;base64,' + images[currentIndex];
+                currentIndex = (currentIndex + 1) % images.length;
+            }
+        }
+
+        // Change image every 5 seconds
+        setInterval(updateImage, 5000);
+
+        window.onload = function() {
+            updateImage();
+        };
+
         function createFloatingHearts() {
             const container = document.getElementById('hearts-container');
             const numberOfHearts = 20;
