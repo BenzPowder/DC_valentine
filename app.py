@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template
 import os
 import base64
 from datetime import datetime
@@ -44,22 +44,22 @@ def add_valentine_frame(image_data):
     # วาดกรอบสีแดง
     draw.rectangle([(0, 0), (width, height)], outline="red", width=5)
     
-    # วาดเมฆ
-    cloud_color = "#D3D3D3"  # สีเทาอ่อน
-    draw.ellipse([(width * 0.1, height * 0.1), (width * 0.3, height * 0.2)], fill=cloud_color)
-    draw.ellipse([(width * 0.2, height * 0.15), (width * 0.4, height * 0.25)], fill=cloud_color)
+    # # วาดเมฆ
+    # cloud_color = "#D3D3D3"  # สีเทาอ่อน
+    # draw.ellipse([(width * 0.1, height * 0.1), (width * 0.3, height * 0.2)], fill=cloud_color)
+    # draw.ellipse([(width * 0.2, height * 0.15), (width * 0.4, height * 0.25)], fill=cloud_color)
     
-    # วาดหัวใจ
-    heart_color = "#FF69B4"  # สีชมพู
-    heart_size = 20
-    for x, y in [(width * 0.7, height * 0.7), (width * 0.8, height * 0.8)]:
-        draw.polygon([
-            (x, y),
-            (x + heart_size, y - heart_size),
-            (x + 2 * heart_size, y),
-            (x + 1.5 * heart_size, y + heart_size),
-            (x + 0.5 * heart_size, y + heart_size)
-        ], fill=heart_color)
+    # # วาดหัวใจ
+    # heart_color = "#FF69B4"  # สีชมพู
+    # heart_size = 20
+    # for x, y in [(width * 0.7, height * 0.7), (width * 0.8, height * 0.8)]:
+    #     draw.polygon([
+    #         (x, y),
+    #         (x + heart_size, y - heart_size),
+    #         (x + 2 * heart_size, y),
+    #         (x + 1.5 * heart_size, y + heart_size),
+    #         (x + 0.5 * heart_size, y + heart_size)
+    #     ], fill=heart_color)
     
     # แปลงกลับเป็น base64
     buffered = io.BytesIO()
@@ -77,7 +77,6 @@ def upload_to_drive(filepath, filename):
 
 @app.route('/')
 def index():
-    # Redirect to camera page
     return render_template('camera.html')
 
 @app.route('/camera')
@@ -130,6 +129,4 @@ def get_latest_photo():
     return jsonify(latest_photo if latest_photo else {'filepath': None})
 
 if __name__ == '__main__':
-    # ใช้ port จาก environment variable ถ้ามี (สำหรับ production)
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(debug=True)
