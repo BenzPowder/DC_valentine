@@ -33,3 +33,8 @@ ENV/
 # Uploaded files
 static/uploads/*
 !static/uploads/.gitkeep
+
+# Credentials and Secrets
+*.json
+!example.json  # ยกเว้น example.json ไว้เป็นตัวอย่าง
+valentine-450812-148fa1138061.json

@@ -1,5 +1,0 @@
-CREATE TABLE images (
-    id SERIAL PRIMARY KEY,
-    image_data BYTEA NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);

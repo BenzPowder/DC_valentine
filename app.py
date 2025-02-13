@@ -4,7 +4,11 @@ import base64
 from datetime import datetime
 from PIL import Image, ImageDraw, ImageFont
 import io
-from ftplib import FTP
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaFileUpload
+from threading import Thread
+import json
 
 app = Flask(__name__)
 
@@ -19,49 +23,43 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # จำกัดขนา�
 # Store the latest photo information
 latest_photo = None
 
+# Define the scope
+SCOPES = ['https://www.googleapis.com/auth/drive.file']
+
+# Load credentials from environment variable
+credentials_info = json.loads(os.environ['GOOGLE_CREDENTIALS'])
+creds = service_account.Credentials.from_service_account_info(credentials_info, scopes=SCOPES)
+
+drive_service = build('drive', 'v3', credentials=creds)
+
 def add_valentine_frame(image_data):
     # แปลง base64 เป็นรูปภาพ
     image_bytes = base64.b64decode(image_data.split(',')[1])
-    img = Image.open(io.BytesIO(image_bytes))
+    image = Image.open(io.BytesIO(image_bytes))
     
-    # ปรับขนาดรูปภาพให้เป็นสี่เหลี่ยมจัตุรัส
-    size = max(img.size)
-    new_img = Image.new('RGB', (size, size), 'white')
-    offset = ((size - img.size[0]) // 2, (size - img.size[1]) // 2)
-    new_img.paste(img, offset)
+    # เพิ่มกรอบวาเลนไทน์
+    draw = ImageDraw.Draw(image)
+    width, height = image.size
+    draw.rectangle([(0, 0), (width, height)], outline="red", width=5)
     
-    # สร้างกรอบหัวใจ
-    draw = ImageDraw.Draw(new_img)
-    
-    # วาดกรอบสีชมพู
-    border_color = "#FF69B4"  # สีชมพู
-    border_width = 20
-    draw.rectangle([0, 0, size-1, size-1], outline=border_color, width=border_width)
-    
-    # วาดหัวใจที่มุม
-    heart_size = 50
-    heart_color = "#FF1493"  # สีชมพูเข้ม
-    
-    # วาดหัวใจที่มุมทั้ง 4 มุม
-    hearts = [(0, 0), (size-heart_size, 0), (0, size-heart_size), (size-heart_size, size-heart_size)]
-    for x, y in hearts:
-        draw.polygon([
-            (x + heart_size//2, y + heart_size//4),
-            (x + heart_size//4, y),
-            (x, y + heart_size//4),
-            (x + heart_size//2, y + heart_size),
-            (x + heart_size, y + heart_size//4),
-            (x + heart_size*3//4, y)
-        ], fill=heart_color)
-    
-    # แปลงรูปภาพกลับเป็น base64
+    # แปลงกลับเป็น base64
     buffered = io.BytesIO()
-    new_img.save(buffered, format="JPEG", quality=85)  # ลดคุณภาพลงเล็กน้อยเพื่อประหยัดพื้นที่
-    return f"data:image/jpeg;base64,{base64.b64encode(buffered.getvalue()).decode()}"
+    image.save(buffered, format="JPEG")
+    return base64.b64encode(buffered.getvalue()).decode('utf-8')
+
+# Function to upload image to Google Drive
+def upload_to_drive(filepath, filename):
+    file_metadata = {
+        'name': filename,
+        'parents': ['1cyo6W45o65fjInm5oLuTf9e4dhvubnr1']
+    }
+    media = MediaFileUpload(filepath, mimetype='image/jpeg')
+    drive_service.files().create(body=file_metadata, media_body=media, fields='id').execute()
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    # Redirect to camera page
+    return render_template('camera.html')
 
 @app.route('/camera')
 def camera():
@@ -69,7 +67,7 @@ def camera():
 
 @app.route('/dashboard')
 def dashboard():
-    # Fetch images from FTP if needed or adjust logic
+    # Fetch images from local storage if needed
     return render_template('dashboard.html')
 
 @app.route('/upload_photo', methods=['POST'])
@@ -90,38 +88,27 @@ def upload_photo():
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         
         # บันทึกรูปภาพ
-        img_data = base64.b64decode(image_with_frame.split(',')[1])
+        img_data = base64.b64decode(image_with_frame)
         with open(filepath, 'wb') as f:
             f.write(img_data)
-        
-        # Upload image to FTP server
-        ftp = FTP()
-        ftp.connect(host="192.168.103.213", port=2121)
-        ftp.login(user="benz.supanat_support", passwd="Aa!35741")
-        ftp.cwd("/public_html/public/valentine")
 
-        with open(filepath, "rb") as file:
-            ftp.storbinary(f'STOR {filename}', file)
-
-        ftp.quit()
-
-        # ลบไฟล์ที่บันทึกในเครื่อง
-        os.remove(filepath)
+        # Run upload in background
+        thread = Thread(target=upload_to_drive, args=(filepath, filename))
+        thread.start()
 
         # อัพเดทรูปภาพล่าสุด
         latest_photo = {
             'filepath': f'/static/uploads/{filename}',
             'timestamp': timestamp
         }
-
-        return jsonify({'success': True, 'message': 'Photo uploaded successfully.'})
-
+        
+        return jsonify({'success': True, 'filepath': latest_photo['filepath']})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 @app.route('/get_latest_photo')
 def get_latest_photo():
-    return jsonify(latest_photo)
+    return jsonify(latest_photo if latest_photo else {'filepath': None})
 
 if __name__ == '__main__':
     # ใช้ port จาก environment variable ถ้ามี (สำหรับ production)
