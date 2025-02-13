@@ -4,6 +4,7 @@ import base64
 from datetime import datetime
 from PIL import Image, ImageDraw, ImageFont
 import io
+import psycopg2
 
 app = Flask(__name__)
 
@@ -69,7 +70,22 @@ def camera():
 
 @app.route('/dashboard')
 def dashboard():
-    return render_template('dashboard.html')
+    conn = psycopg2.connect(
+        host="host213.dungbhumi.com",
+        user="benz.supanat_ticket",
+        password="Aa!35741",
+        dbname="benz.supanat_ticket"
+    )
+    cursor = conn.cursor()
+    cursor.execute("SELECT image_data FROM images ORDER BY created_at DESC")
+    images = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    # Convert binary data to base64 for HTML rendering
+    images_base64 = [base64.b64encode(image[0]).decode('utf-8') for image in images]
+
+    return render_template('dashboard.html', images=images_base64)
 
 @app.route('/upload_photo', methods=['POST'])
 def upload_photo():
@@ -93,6 +109,25 @@ def upload_photo():
         with open(filepath, 'wb') as f:
             f.write(img_data)
         
+        # บันทึกรูปภาพลงในฐานข้อมูล
+        with open(filepath, "rb") as image_file:
+            image_data = image_file.read()
+
+        conn = psycopg2.connect(
+            host="host213.dungbhumi.com",
+            user="benz.supanat_ticket",
+            password="Aa!35741",
+            dbname="benz.supanat_ticket"
+        )
+        cursor = conn.cursor()
+        cursor.execute("INSERT INTO images (image_data) VALUES (%s)", (psycopg2.Binary(image_data),))
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        # ลบไฟล์ที่บันทึกในเครื่อง
+        os.remove(filepath)
+
         # อัพเดทรูปภาพล่าสุด
         latest_photo = {
             'filepath': f'/static/uploads/{filename}',
