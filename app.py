@@ -9,6 +9,7 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
 from threading import Thread
 import json
+from flask import request, jsonify
 
 app = Flask(__name__)
 
@@ -44,22 +45,22 @@ def add_valentine_frame(image_data):
     # วาดกรอบสีแดง
     draw.rectangle([(0, 0), (width, height)], outline="red", width=5)
     
-    # # วาดเมฆ
-    # cloud_color = "#D3D3D3"  # สีเทาอ่อน
-    # draw.ellipse([(width * 0.1, height * 0.1), (width * 0.3, height * 0.2)], fill=cloud_color)
-    # draw.ellipse([(width * 0.2, height * 0.15), (width * 0.4, height * 0.25)], fill=cloud_color)
+    # วาดเมฆ
+    cloud_color = "#D3D3D3"  # สีเทาอ่อน
+    draw.ellipse([(width * 0.1, height * 0.1), (width * 0.3, height * 0.2)], fill=cloud_color)
+    draw.ellipse([(width * 0.2, height * 0.15), (width * 0.4, height * 0.25)], fill=cloud_color)
     
-    # # วาดหัวใจ
-    # heart_color = "#FF69B4"  # สีชมพู
-    # heart_size = 20
-    # for x, y in [(width * 0.7, height * 0.7), (width * 0.8, height * 0.8)]:
-    #     draw.polygon([
-    #         (x, y),
-    #         (x + heart_size, y - heart_size),
-    #         (x + 2 * heart_size, y),
-    #         (x + 1.5 * heart_size, y + heart_size),
-    #         (x + 0.5 * heart_size, y + heart_size)
-    #     ], fill=heart_color)
+    # วาดหัวใจ
+    heart_color = "#FF69B4"  # สีชมพู
+    heart_size = 20
+    for x, y in [(width * 0.7, height * 0.7), (width * 0.8, height * 0.8)]:
+        draw.polygon([
+            (x, y),
+            (x + heart_size, y - heart_size),
+            (x + 2 * heart_size, y),
+            (x + 1.5 * heart_size, y + heart_size),
+            (x + 0.5 * heart_size, y + heart_size)
+        ], fill=heart_color)
     
     # แปลงกลับเป็น base64
     buffered = io.BytesIO()
@@ -85,8 +86,9 @@ def camera():
 
 @app.route('/dashboard')
 def dashboard():
-    # Fetch images from local storage if needed
-    return render_template('dashboard.html')
+    # Fetch images from local storage or database
+    images = [f'/static/uploads/{file}' for file in os.listdir(UPLOAD_FOLDER) if file.endswith('.jpg')]
+    return render_template('dashboard.html', images=images)
 
 @app.route('/upload_photo', methods=['POST'])
 def upload_photo():
