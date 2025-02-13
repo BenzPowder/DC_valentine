@@ -38,22 +38,35 @@ def add_valentine_frame(image_data):
     image_bytes = base64.b64decode(image_data.split(',')[1])
     image = Image.open(io.BytesIO(image_bytes))
     
-    # เพิ่มกรอบวาเลนไทน์
     draw = ImageDraw.Draw(image)
     width, height = image.size
+
+    # วาดกรอบสีชมพู
+    frame_color = "#FFB6C1"  # สีชมพูอ่อน
+    frame_width = 10
+    draw.rectangle([(0, 0), (width, height)], outline=frame_color, width=frame_width)
     
-    # วาดกรอบสีแดง
-    draw.rectangle([(0, 0), (width, height)], outline="red", width=5)
+    # วาดเมฆสีขาวตามมุมของกรอบ
+    cloud_color = "#FFFFFF"
+    cloud_positions = [
+        (0, 0, 80, 40),  # มุมซ้ายบน
+        (width - 100, 0, width, 50),  # มุมขวาบน
+        (0, height - 50, 80, height),  # มุมซ้ายล่าง
+        (width - 100, height - 50, width, height)  # มุมขวาล่าง
+    ]
+    for pos in cloud_positions:
+        draw.ellipse(pos, fill=cloud_color)
     
-    # วาดเมฆ
-    cloud_color = "#D3D3D3"  # สีเทาอ่อน
-    draw.ellipse([(width * 0.1, height * 0.1), (width * 0.3, height * 0.2)], fill=cloud_color)
-    draw.ellipse([(width * 0.2, height * 0.15), (width * 0.4, height * 0.25)], fill=cloud_color)
-    
-    # วาดหัวใจ
-    heart_color = "#FF69B4"  # สีชมพู
-    heart_size = 20
-    for x, y in [(width * 0.7, height * 0.7), (width * 0.8, height * 0.8)]:
+    # วาดหัวใจเล็ก ๆ ตามมุมของกรอบ
+    heart_color = "#FF69B4"  # สีชมพูสด
+    heart_size = 15
+    heart_positions = [
+        (10, 10),  # มุมซ้ายบน
+        (width - 30, 10),  # มุมขวาบน
+        (10, height - 30),  # มุมซ้ายล่าง
+        (width - 30, height - 30)  # มุมขวาล่าง
+    ]
+    for x, y in heart_positions:
         draw.polygon([
             (x, y),
             (x + heart_size, y - heart_size),
@@ -61,11 +74,12 @@ def add_valentine_frame(image_data):
             (x + 1.5 * heart_size, y + heart_size),
             (x + 0.5 * heart_size, y + heart_size)
         ], fill=heart_color)
-    
+
     # แปลงกลับเป็น base64
     buffered = io.BytesIO()
     image.save(buffered, format="JPEG")
     return base64.b64encode(buffered.getvalue()).decode('utf-8')
+
 
 # Function to upload image to Google Drive
 def upload_to_drive(filepath, filename):
