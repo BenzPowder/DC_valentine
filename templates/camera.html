@@ -29,6 +29,7 @@
             background: black;
             border-radius: 10px;
             margin: 10px 0;
+            z-index: 1; /* Ensure the container is below the cloud and sticker */
         }
         #video, #canvas, #preview {
             width: 100%;
@@ -73,6 +74,12 @@
             margin: 10px 0;
             text-align: center;
             display: none;
+        }
+        #cloud, #sticker {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 10; /* Ensure these elements are above the image */
         }
     </style>
 </head>
