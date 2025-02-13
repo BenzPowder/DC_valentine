@@ -5,6 +5,7 @@ from datetime import datetime
 from PIL import Image, ImageDraw, ImageFont
 import io
 import psycopg2
+from ftplib import FTP
 
 app = Flask(__name__)
 
@@ -109,21 +110,16 @@ def upload_photo():
         with open(filepath, 'wb') as f:
             f.write(img_data)
         
-        # บันทึกรูปภาพลงในฐานข้อมูล
-        with open(filepath, "rb") as image_file:
-            image_data = image_file.read()
+        # Upload image to FTP server
+        ftp = FTP()
+        ftp.connect(host="192.168.103.213", port=2121)
+        ftp.login(user="benz.supanat_support", passwd="Aa!35741")
+        ftp.cwd("/public_html/public/valentine")
 
-        conn = psycopg2.connect(
-            host="host213.dungbhumi.com",
-            user="benz.supanat_ticket",
-            password="Aa!35741",
-            dbname="benz.supanat_ticket"
-        )
-        cursor = conn.cursor()
-        cursor.execute("INSERT INTO images (image_data) VALUES (%s)", (psycopg2.Binary(image_data),))
-        conn.commit()
-        cursor.close()
-        conn.close()
+        with open(filepath, "rb") as file:
+            ftp.storbinary(f'STOR {filename}', file)
+
+        ftp.quit()
 
         # ลบไฟล์ที่บันทึกในเครื่อง
         os.remove(filepath)
