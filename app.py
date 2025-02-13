@@ -10,6 +10,9 @@ from googleapiclient.http import MediaFileUpload
 from threading import Thread
 import json
 from flask import request, jsonify
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 app = Flask(__name__)
 
@@ -34,6 +37,8 @@ creds = service_account.Credentials.from_service_account_info(credentials_info, 
 drive_service = build('drive', 'v3', credentials=creds)
 
 def add_valentine_frame(image_data):
+    start_time = datetime.now()
+    logging.info("Starting add_valentine_frame")
     # แปลง base64 เป็นรูปภาพ
     image_bytes = base64.b64decode(image_data.split(',')[1])
     image = Image.open(io.BytesIO(image_bytes))
@@ -78,8 +83,9 @@ def add_valentine_frame(image_data):
     # แปลงกลับเป็น base64
     buffered = io.BytesIO()
     image.save(buffered, format="JPEG")
-    return base64.b64encode(buffered.getvalue()).decode('utf-8')
-
+    result = base64.b64encode(buffered.getvalue()).decode('utf-8')
+    logging.info("Completed add_valentine_frame in %s", datetime.now() - start_time)
+    return result
 
 # Function to upload image to Google Drive
 def upload_to_drive(filepath, filename):
@@ -106,6 +112,8 @@ def dashboard():
 
 @app.route('/upload_photo', methods=['POST'])
 def upload_photo():
+    start_time = datetime.now()
+    logging.info("Starting upload_photo")
     global latest_photo
     
     try:
@@ -136,7 +144,9 @@ def upload_photo():
             'timestamp': timestamp
         }
         
-        return jsonify({'success': True, 'filepath': latest_photo['filepath']})
+        result = jsonify({'success': True, 'filepath': latest_photo['filepath']})
+        logging.info("Completed upload_photo in %s", datetime.now() - start_time)
+        return result
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
