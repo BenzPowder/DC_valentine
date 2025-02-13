@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="th">
 <head>
     <title>Dashboard แสดงภาพ</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -36,19 +36,13 @@
             max-width: 100%;
             max-height: 100%;
             object-fit: contain;
-            padding: 20px;
-            box-sizing: border-box;
             opacity: 0;
             transition: opacity 0.5s ease-in-out;
-        }
-        .latest-photo.visible {
-            opacity: 1;
         }
         .no-photo {
             color: #e91e63;
             font-size: 24px;
             text-align: center;
-            padding: 20px;
         }
         .floating-hearts {
             position: fixed;
@@ -75,97 +69,60 @@
 <body>
     <h1 class="title">❤️ Happy Valentine's Day ❤️</h1>
     <div class="photo-frame">
-        <img id="photo-display" class="latest-photo">
-        <div id="no-photo" class="no-photo" style="display: none;">
-            ยังไม่มีรูปภาพ<br>กรุณารอสักครู่...
-        </div>
+        <img id="photo-display" class="latest-photo" alt="Latest Photo">
+        <div id="no-photo" class="no-photo">ยังไม่มีรูปภาพ<br>กรุณารอสักครู่...</div>
     </div>
     <div class="floating-hearts" id="hearts-container"></div>
 
     <script>
-        let currentIndex = 0;
-        const images = {{ images|tojson }};
+        let currentPhotoPath = null;
 
-        function updateImage() {
-            const imgElement = document.getElementById('photo-display');
-            if (images.length > 0) {
-                imgElement.src = 'data:image/jpeg;base64,' + images[currentIndex];
-                currentIndex = (currentIndex + 1) % images.length;
-            }
-        }
-
-        // Change image every 5 seconds
-        setInterval(updateImage, 5000);
-
-        window.onload = function() {
-            updateImage();
-        };
-
+        // สร้างหัวใจลอย
         function createFloatingHearts() {
             const container = document.getElementById('hearts-container');
-            const numberOfHearts = 20;
-            
-            for (let i = 0; i < numberOfHearts; i++) {
-                const heart = document.createElement('div');
-                heart.className = 'heart';
-                heart.innerHTML = '❤';
-                heart.style.left = Math.random() * 100 + '%';
-                heart.style.animationDelay = Math.random() * 5 + 's';
-                heart.style.fontSize = (Math.random() * 20 + 15) + 'px';
-                container.appendChild(heart);
-                
-                heart.addEventListener('animationend', () => {
-                    heart.remove();
-                    createOneHeart();
-                });
+            for (let i = 0; i < 20; i++) {
+                createOneHeart(container);
             }
         }
 
-        function createOneHeart() {
-            const container = document.getElementById('hearts-container');
+        function createOneHeart(container) {
             const heart = document.createElement('div');
             heart.className = 'heart';
             heart.innerHTML = '❤';
             heart.style.left = Math.random() * 100 + '%';
             heart.style.fontSize = (Math.random() * 20 + 15) + 'px';
+            heart.style.animationDelay = Math.random() * 5 + 's';
             container.appendChild(heart);
-            
+
             heart.addEventListener('animationend', () => {
                 heart.remove();
-                createOneHeart();
+                createOneHeart(container);
             });
         }
 
-        let currentPhotoPath = null;
-
+        // อัพเดทรูปภาพล่าสุดจากเซิร์ฟเวอร์
         async function updateLatestPhoto() {
             try {
                 const response = await fetch('/get_latest_photo');
                 const data = await response.json();
-                const img = document.getElementById('latest-photo');
+                const img = document.getElementById('photo-display');
                 const noPhoto = document.getElementById('no-photo');
-                
-                if (data.filepath) {
-                    // ถ้ามีรูปใหม่และไม่ใช่รูปเดิม
+
+                if (data.filepath && data.filepath !== 'null') {
                     if (data.filepath !== currentPhotoPath) {
-                        img.style.opacity = '0';  // ทำให้จางก่อน
-                        
-                        // รอให้การเปลี่ยน opacity เสร็จสิ้น
+                        img.style.opacity = '0';
                         setTimeout(() => {
                             img.src = data.filepath;
-                            img.style.opacity = '1';  // แสดงรูปใหม่
+                            img.style.opacity = '1';
                             currentPhotoPath = data.filepath;
                         }, 500);
                     }
-                    
                     img.style.display = 'block';
                     noPhoto.style.display = 'none';
-                } else if (!currentPhotoPath) {
-                    // แสดง no-photo เฉพาะเมื่อไม่เคยมีรูปมาก่อน
+                } else {
                     img.style.display = 'none';
                     noPhoto.style.display = 'block';
                 }
-                // ถ้าไม่มีรูปใหม่และมีรูปเก่าอยู่ ให้แสดงรูปเก่าต่อไป
             } catch (error) {
                 console.error('Error fetching latest photo:', error);
             }
@@ -173,7 +130,7 @@
 
         // เริ่มต้นสร้างหัวใจลอย
         createFloatingHearts();
-        
+
         // อัพเดทรูปภาพทุก 5 วินาที
         updateLatestPhoto();
         setInterval(updateLatestPhoto, 5000);
